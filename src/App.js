@@ -2797,7 +2797,7 @@ function CardDisplay({ data, settings, darkMode, toggleDarkMode, showAlert }) {
       .map(l => sanitizeText(safeDecode((l.url || '').slice(7).split('?')[0]).replace(/[\r\n%]/g, '')).substring(0, 120))
       .filter(Boolean);
     const linkPhones = (links || [])
-      .filter(l => /^tel:/i.test(l.url || '') && l.title)
+      .filter(l => /^(tel|sms):/i.test(l.url || '') && l.title)
       .map(l => sanitizeText((l.url || '').slice(4).replace(/[^\d+]/g, '')).substring(0, 50))
       .filter(Boolean);
 
