@@ -1420,7 +1420,9 @@ const cardDataValidation = [
   body('links').optional().isArray().withMessage('Links must be an array'),
   body('links.*.title').optional().trim().isLength({ max: 200 }).withMessage('Link title too long'),
   body('links.*.url').optional().trim().custom((value) => {
-    if (value && !validator.isURL(value, { protocols: ['http', 'https'] })) {
+    const isHttpUrl = validator.isURL(value, { protocols: ['http', 'https'] });
+    const isContactScheme = /^(mailto|tel|sms):/i.test(value);
+    if (value && !isHttpUrl && !isContactScheme) {
       throw new Error('Invalid link URL');
     }
     return true;
@@ -2039,7 +2041,7 @@ app.post('/api/cards/:slug', requireAuth, apiLimiter, csrfProtection, [
       url: (link.url || '').trim(),
       icon: link.icon || 'link',
       iconUrl: sanitizeUploadUrl(link.iconUrl)
-    })).filter(link => link.url && validator.isURL(link.url, { protocols: ['http', 'https'] })),
+    })).filter(link => link.url && (validator.isURL(link.url, { protocols: ['http', 'https'] }) || /^(mailto|tel|sms):/i.test(link.url))),
     privacy: {
       requireInteraction: typeof req.body.privacy?.requireInteraction === 'boolean' ? req.body.privacy.requireInteraction : true,
       clientSideObfuscation: typeof req.body.privacy?.clientSideObfuscation === 'boolean' ? req.body.privacy.clientSideObfuscation : false,

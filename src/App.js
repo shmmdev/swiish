@@ -87,16 +87,26 @@ const QR_STORAGE_KEY = 'swiish:lastQrPayload';
 // Build a vCard string for QR code encoding (simplified for reliable scanning)
 // When scanned, this will add the contact directly to the phone
 const buildQrPayload = (shortCode, data) => {
-  const { personal = {}, contact = {} } = data || {};
+  const { personal = {}, contact = {}, links = [] } = data || {};
 
   const safe = (v, maxLen = 120) => sanitizeText(v || '').substring(0, maxLen);
-  
+
   const firstName = safe(personal.firstName || '', 40);
   const lastName = safe(personal.lastName || '', 40);
   const fullName = `${firstName} ${lastName}`.trim();
   const company = safe(personal.company || '', 80);
   const email = safe(contact.email || '', 120);
   const phone = safe(contact.phone || '', 50);
+
+  // Extra emails/phones can live in links as mailto:/tel: entries
+  const linkEmails = (Array.isArray(links) ? links : [])
+    .filter(l => /^mailto:/i.test(l.url || '') && l.title)
+    .map(l => ({ email: safe(decodeURIComponent((l.url || '').slice(7).split('?')[0]), 120), label: safe(l.title, 60) }))
+    .filter(e => e.email);
+  const linkPhones = (Array.isArray(links) ? links : [])
+    .filter(l => /^(tel|sms):/i.test(l.url || '') && l.title)
+    .map(l => ({ phone: safe((l.url || '').replace(/^(tel|sms):/i, '').replace(/[^\d+]/g, ''), 50), label: safe(l.title, 60) }))
+    .filter(p => p.phone);
 
   // Use short code for QR URL (always use short code for simpler QR)
   const cardUrl = typeof window !== 'undefined' && shortCode
@@ -118,10 +128,18 @@ const buildQrPayload = (shortCode, data) => {
   if (email) {
     vcard += `EMAIL;TYPE=WORK:${email}\n`;
   }
-  
+
+  linkEmails.forEach(e => {
+    vcard += `EMAIL;TYPE=INTERNET:${e.email}\n`;
+  });
+
   if (phone) {
     vcard += `TEL;TYPE=CELL:${phone}\n`;
   }
+
+  linkPhones.forEach(p => {
+    vcard += `TEL;TYPE=VOICE:${p.phone}\n`;
+  });
   
   if (cardUrl) {
     vcard += `URL:${cardUrl}\n`;
@@ -184,7 +202,9 @@ const ICON_MAP = {
   youtube: Youtube,
   facebook: Facebook,
   whatsapp: MessageCircle,
-  globe: Globe
+  globe: Globe,
+  mail: Mail,
+  phone: Phone
 };
 
 function LinkGlyph({ link, className = "w-5 h-5" }) {
@@ -2680,7 +2700,7 @@ function CardDisplay({ data, settings, darkMode, toggleDarkMode, showAlert }) {
     // For QR generation, always use short code if available, otherwise fallback to slug
     const qrIdentifier = shortCode || (pathParts.length > 0 ? pathParts[pathParts.length - 1] : '');
     
-    const payload = buildQrPayload(shortCode, { personal, contact, social, images, theme });
+    const payload = buildQrPayload(shortCode, { personal, contact, social, images, theme, links });
     // Always cache latest rich payload for offline use
     saveQrPayloadToStorage(payload);
 
@@ -2759,7 +2779,20 @@ function CardDisplay({ data, settings, darkMode, toggleDarkMode, showAlert }) {
     const email = sanitizeText(contact.email || '');
     const website = sanitizeText(contact.website || '');
     const bio = sanitizeText(personal.bio || '');
-    
+
+    // Extra emails/phones from links (mailto:/tel: entries)
+    const linkEmails = (links || [])
+      .filter(l => /^mailto:/i.test(l.url || '') && l.title)
+      .map(l => sanitizeText(decodeURIComponent((l.url || '').slice(7).split('?')[0])).substring(0, 120))
+      .filter(Boolean);
+    const linkPhones = (links || [])
+      .filter(l => /^tel:/i.test(l.url || '') && l.title)
+      .map(l => sanitizeText((l.url || '').slice(4).replace(/[^\d+]/g, '')).substring(0, 50))
+      .filter(Boolean);
+
+    const extraEmailLines = linkEmails.map(e => `EMAIL;TYPE=INTERNET:${e}`).join('\n');
+    const extraPhoneLines = linkPhones.map(p => `TEL;TYPE=VOICE:${p}`).join('\n');
+
     const vcard = `BEGIN:VCARD
 VERSION:3.0
 FN:${firstName} ${lastName}
@@ -2768,6 +2801,8 @@ ORG:${company}
 TITLE:${title}
 TEL;TYPE=CELL:${phone}
 EMAIL;TYPE=WORK:${email}
+${extraPhoneLines}
+${extraEmailLines}
 URL:${website}
 NOTE:${bio}
 END:VCARD`;
@@ -3173,11 +3208,10 @@ END:VCARD`;
               const color = settings?.theme_colors?.find(c => c.name === theme.color);
               if (color?.linkStyle) {
                 return (
-                  <a 
+                  <a
                     key={link.id}
-                    href={link.url} 
-                    target="_blank" 
-                    rel="noreferrer"
+                    href={link.url}
+                    {...(/^https?:/i.test(link.url || '') ? { target: '_blank', rel: 'noreferrer' } : {})}
                     className="flex items-center p-4 rounded-input border transition-all active:scale-[0.99]"
                     style={{ 
                       color: color.linkStyle, 
@@ -3208,11 +3242,10 @@ END:VCARD`;
                 );
               }
               return (
-                <a 
-                  key={link.id} 
-                  href={link.url} 
-                  target="_blank" 
-                  rel="noreferrer"
+                <a
+                  key={link.id}
+                  href={link.url}
+                  {...(/^https?:/i.test(link.url || '') ? { target: '_blank', rel: 'noreferrer' } : {})}
                   className="flex items-center p-4 rounded-input border transition-all active:scale-[0.99] dark:border-border-dark"
                   style={{ color: getLinkColor(theme.color, settings) }}
                   onMouseEnter={(e) => {
