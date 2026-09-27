@@ -255,6 +255,7 @@ const getDefaultTemplate = (settings) => ({
     firstName: "New",
     lastName: "User",
     title: "Role Title",
+    subtitle: "",
     company: settings?.default_organisation || "My Organisation",
     bio: "Welcome to the team.",
     location: "London, UK"
@@ -3079,13 +3080,24 @@ END:VCARD`;
           {(() => {
             const color = settings?.theme_colors?.find(c => c.name === theme.color);
             const title = sanitizeText(personal.title || '');
-            if (color?.textStyle) {
-              return <div className="text-lg font-medium" style={{ color: color.textStyle }}>{title}</div>;
-            }
-            return <div className="text-lg font-medium" style={{ color: getTextColor(theme.color, settings) }}>{title}</div>;
+            const subtitle = sanitizeText(personal.subtitle || '');
+            const titleStyle = { color: (color?.textStyle || getTextColor(theme.color, settings)) };
+            return (
+              <>
+                {title && <div className="text-lg font-medium" style={titleStyle}>{title}</div>}
+                {subtitle && <div className="text-base font-normal opacity-90" style={titleStyle}>{subtitle}</div>}
+              </>
+            );
           })()}
           <div className="flex items-center text-text-muted dark:text-text-muted-dark text-sm gap-2"><Briefcase className="w-4 h-4" /><span>{sanitizeText(personal.company || '')}</span></div>
-          {personal.location && <div className="flex items-center text-text-muted-subtle dark:text-text-muted-dark text-sm gap-2 mt-1"><MapPin className="w-4 h-4" /><span>{sanitizeText(personal.location)}</span></div>}
+          {personal.location && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sanitizeText(personal.location))}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center text-text-muted-subtle dark:text-text-muted-dark text-sm gap-2 mt-1 hover:underline"
+            ><MapPin className="w-4 h-4" /><span>{sanitizeText(personal.location)}</span></a>
+          )}
         </div>
 
         {personal.bio && <div className="mb-8"><p className="text-text-secondary dark:text-text-secondary-dark leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHTML(personal.bio) }}></p></div>}
@@ -3494,6 +3506,7 @@ function EditorView({ data, setData, onBack, onSave, slug, settings, csrfToken, 
                   <Input label="First Name" value={data.personal.firstName} onChange={v => handleInputChange('personal', 'firstName', v)} />
                   <Input label="Last Name" value={data.personal.lastName} onChange={v => handleInputChange('personal', 'lastName', v)} />
                   <Input label="Job Title" value={data.personal.title} onChange={v => handleInputChange('personal', 'title', v)} />
+                  <Input label="Job Subtitle / Credentials" value={data.personal.subtitle || ''} onChange={v => handleInputChange('personal', 'subtitle', v)} />
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-text-primary dark:text-text-secondary-dark">Organisation</label>
                     <div className="relative">
