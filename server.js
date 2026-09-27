@@ -1377,6 +1377,7 @@ const cardDataValidation = [
   body('personal.firstName').optional().trim().isLength({ max: 100 }).withMessage('First name too long'),
   body('personal.lastName').optional().trim().isLength({ max: 100 }).withMessage('Last name too long'),
   body('personal.title').optional().trim().isLength({ max: 200 }).withMessage('Title too long'),
+  body('personal.subtitle').optional().trim().isLength({ max: 200 }).withMessage('Subtitle too long'),
   body('personal.company').optional().trim().isLength({ max: 200 }).withMessage('Company name too long'),
   body('personal.bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio too long'),
   body('personal.location').optional().trim().isLength({ max: 200 }).withMessage('Location too long'),
@@ -2015,6 +2016,7 @@ app.post('/api/cards/:slug', requireAuth, apiLimiter, csrfProtection, [
       firstName: (req.body.personal?.firstName || '').trim().substring(0, 100),
       lastName: (req.body.personal?.lastName || '').trim().substring(0, 100),
       title: (req.body.personal?.title || '').trim().substring(0, 200),
+      subtitle: (req.body.personal?.subtitle || '').trim().substring(0, 200),
       company: (req.body.personal?.company || '').trim().substring(0, 200),
       bio: (req.body.personal?.bio || '').trim().substring(0, 1000),
       location: (req.body.personal?.location || '').trim().substring(0, 200)
