@@ -213,7 +213,8 @@ const ICON_MAP = {
   whatsapp: MessageCircle,
   globe: Globe,
   mail: Mail,
-  phone: Phone
+  phone: Phone,
+  map: MapPin
 };
 
 function LinkGlyph({ link, className = "w-5 h-5" }) {
