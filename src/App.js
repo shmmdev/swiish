@@ -10,7 +10,7 @@ import {
   X, Check, User, MapPin, Briefcase, Lock, LogIn, AlertCircle, 
   Plus, Trash2, ArrowLeft, Users, ExternalLink, RefreshCw,
   Download, FileText, Calendar, Video, Music, ShoppingCart, 
-  Link as LinkIcon, Youtube, Facebook, MessageCircle, Sun, Moon,
+  Link as LinkIcon, Youtube, Facebook, MessageCircle, Sun, Moon, Music2, Send,
   ChevronUp, ChevronDown, GripVertical, Settings
 } from 'lucide-react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
@@ -214,7 +214,13 @@ const ICON_MAP = {
   globe: Globe,
   mail: Mail,
   phone: Phone,
-  map: MapPin
+  map: MapPin,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  instagram: Instagram,
+  github: Github,
+  tiktok: Music2,
+  telegram: Send
 };
 
 function LinkGlyph({ link, className = "w-5 h-5" }) {
