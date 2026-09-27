@@ -234,7 +234,8 @@ const getDefaultTemplate = (settings) => ({
     subtitle: "",
     company: settings?.default_organisation || "My Organisation",
     bio: "Welcome to the team.",
-    location: "London, UK"
+    location: "London, UK",
+    mapLink: ""
   },
   contact: {
     email: "",
@@ -3040,18 +3041,22 @@ END:VCARD`;
             return (
               <>
                 {title && <div className="text-lg font-medium" style={titleStyle}>{title}</div>}
-                {subtitle && <div className="text-base font-normal opacity-90" style={titleStyle}>{subtitle}</div>}
+                {subtitle && <div className="text-sm font-normal -mt-0.5" style={titleStyle}>{subtitle}</div>}
               </>
             );
           })()}
           <div className="flex items-center text-text-muted dark:text-text-muted-dark text-sm gap-2"><Briefcase className="w-4 h-4" /><span>{sanitizeText(personal.company || '')}</span></div>
           {personal.location && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sanitizeText(personal.location))}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center text-text-muted-subtle dark:text-text-muted-dark text-sm gap-2 mt-1 hover:underline"
-            ><MapPin className="w-4 h-4" /><span>{sanitizeText(personal.location)}</span></a>
+            personal.mapLink ? (
+              <a
+                href={personal.mapLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center text-text-muted-subtle dark:text-text-muted-dark text-sm gap-2 mt-1 hover:underline"
+              ><MapPin className="w-4 h-4" /><span>{sanitizeText(personal.location)}</span></a>
+            ) : (
+              <div className="flex items-center text-text-muted-subtle dark:text-text-muted-dark text-sm gap-2 mt-1"><MapPin className="w-4 h-4" /><span>{sanitizeText(personal.location)}</span></div>
+            )
           )}
         </div>
 
@@ -3479,6 +3484,7 @@ function EditorView({ data, setData, onBack, onSave, slug, settings, csrfToken, 
                   </div>
                 </div>
                 <Input label="Location" value={data.personal.location} onChange={v => handleInputChange('personal', 'location', v)} />
+                <Input label="Map Link (opens when location is clicked)" value={data.personal.mapLink || ''} onChange={v => handleInputChange('personal', 'mapLink', v)} />
                 <TextArea label="Bio" value={data.personal.bio} onChange={v => handleInputChange('personal', 'bio', v)} />
                 <div className="h-px bg-surface dark:bg-surface-dark" />
                 <div className="space-y-4">

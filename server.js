@@ -1381,6 +1381,12 @@ const cardDataValidation = [
   body('personal.company').optional().trim().isLength({ max: 200 }).withMessage('Company name too long'),
   body('personal.bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio too long'),
   body('personal.location').optional().trim().isLength({ max: 200 }).withMessage('Location too long'),
+  body('personal.mapLink').optional().trim().custom((value) => {
+    if (value && !validator.isURL(value, { protocols: ['http', 'https'] })) {
+      throw new Error('Invalid map link URL');
+    }
+    return true;
+  }),
   body('contact.email').optional().trim().custom((value) => {
     if (value && !validator.isEmail(value)) {
       throw new Error('Invalid email format');
@@ -2019,7 +2025,8 @@ app.post('/api/cards/:slug', requireAuth, apiLimiter, csrfProtection, [
       subtitle: (req.body.personal?.subtitle || '').trim().substring(0, 200),
       company: (req.body.personal?.company || '').trim().substring(0, 200),
       bio: (req.body.personal?.bio || '').trim().substring(0, 1000),
-      location: (req.body.personal?.location || '').trim().substring(0, 200)
+      location: (req.body.personal?.location || '').trim().substring(0, 200),
+      mapLink: (req.body.personal?.mapLink || '').trim().substring(0, 500)
     },
     contact: {
       email: (req.body.contact?.email || '').trim(),
