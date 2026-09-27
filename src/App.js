@@ -86,6 +86,15 @@ const QR_STORAGE_KEY = 'swiish:lastQrPayload';
 
 // Build a vCard string for QR code encoding (simplified for reliable scanning)
 // When scanned, this will add the contact directly to the phone
+// decodeURIComponent throws URIError on malformed percent-encoding (e.g. mailto:100%off@x)
+const safeDecode = (v) => {
+  try {
+    return decodeURIComponent(v);
+  } catch {
+    return v;
+  }
+};
+
 const buildQrPayload = (shortCode, data) => {
   const { personal = {}, contact = {}, links = [] } = data || {};
 
@@ -101,7 +110,7 @@ const buildQrPayload = (shortCode, data) => {
   // Extra emails/phones can live in links as mailto:/tel: entries
   const linkEmails = (Array.isArray(links) ? links : [])
     .filter(l => /^mailto:/i.test(l.url || '') && l.title)
-    .map(l => ({ email: safe(decodeURIComponent((l.url || '').slice(7).split('?')[0]), 120), label: safe(l.title, 60) }))
+    .map(l => ({ email: safe(safeDecode((l.url || '').slice(7).split('?')[0]).replace(/[\r\n%]/g, ''), 120), label: safe(l.title, 60) }))
     .filter(e => e.email);
   const linkPhones = (Array.isArray(links) ? links : [])
     .filter(l => /^(tel|sms):/i.test(l.url || '') && l.title)
@@ -2785,7 +2794,7 @@ function CardDisplay({ data, settings, darkMode, toggleDarkMode, showAlert }) {
     // Extra emails/phones from links (mailto:/tel: entries)
     const linkEmails = (links || [])
       .filter(l => /^mailto:/i.test(l.url || '') && l.title)
-      .map(l => sanitizeText(decodeURIComponent((l.url || '').slice(7).split('?')[0])).substring(0, 120))
+      .map(l => sanitizeText(safeDecode((l.url || '').slice(7).split('?')[0]).replace(/[\r\n%]/g, '')).substring(0, 120))
       .filter(Boolean);
     const linkPhones = (links || [])
       .filter(l => /^tel:/i.test(l.url || '') && l.title)

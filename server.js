@@ -1381,7 +1381,7 @@ const cardDataValidation = [
   body('personal.company').optional().trim().isLength({ max: 200 }).withMessage('Company name too long'),
   body('personal.bio').optional().trim().isLength({ max: 1000 }).withMessage('Bio too long'),
   body('personal.location').optional().trim().isLength({ max: 200 }).withMessage('Location too long'),
-  body('personal.mapLink').optional().trim().custom((value) => {
+  body('personal.mapLink').optional().trim().isLength({ max: 500 }).withMessage('Map link too long').custom((value) => {
     if (value && !validator.isURL(value, { protocols: ['http', 'https'] })) {
       throw new Error('Invalid map link URL');
     }
